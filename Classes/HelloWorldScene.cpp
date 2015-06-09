@@ -6,10 +6,10 @@ USING_NS_CC;
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
-    //auto scene = Scene::create();
-	auto scene = Scene::createWithPhysics();
-	scene->getPhysicsWorld()->setGravity(Vect(0,-900));
-	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+    auto scene = Scene::create();
+	//auto scene = Scene::createWithPhysics();
+	//scene->getPhysicsWorld()->setGravity(Vect(0,-900));
+	//scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
 
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
@@ -35,7 +35,9 @@ bool HelloWorld::init()
     Size visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-	
+	pipe_count = 0;
+	firstTouch = true;
+	playerState = STATE::READY;
     /////////////////////////////
     // 2. add a menu item with "X" image, which is clicked to quit the program
     //    you may modify it.
@@ -71,13 +73,13 @@ bool HelloWorld::init()
 
 	
     // add "HelloWorld" splash screen"
-    auto sprite = Sprite::create("Dota2.jpg");
-    
+	bg = Sprite::create("Dota2.jpg");
+	bg->retain();
     // position the sprite on the center of the screen
-    sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
-
+	bg->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
+	
     // add the sprite as a child to this layer
-    this->addChild(sprite, 0);
+	this->addChild(bg, 0);
     
 
 	//hzk add 
@@ -85,10 +87,10 @@ bool HelloWorld::init()
 	_player = Sprite::create("player-hd.png");
 	_player->setPosition(visibleSize.width / 8, visibleSize.height / 2);
 
-	auto OneBody = PhysicsBody::createBox(_player->getContentSize());
-	OneBody->setContactTestBitmask(0x04);
-	OneBody->applyImpulse(Vec2(0.0f, 0.0f));
-	_player->setPhysicsBody(OneBody);
+	//auto OneBody = PhysicsBody::createBox(_player->getContentSize());
+	//OneBody->setContactTestBitmask(0x04);
+
+	//_player->setPhysicsBody(OneBody);
 	this->addChild(_player,0);
 	_player->retain();
 
@@ -135,37 +137,68 @@ void HelloWorld::update(float dt){
 bool HelloWorld::onTouchBegan(Touch* pTouch, Event* pEvent)
 {
 
+	if (playerState == STATE::JUMPING)
+	{
+		return true;
+	}
+	auto move = MoveTo::create(0.5f, Vec2(bg->getPositionX() - 100, bg->getPositionY()));
+	bg->runAction(move);
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 
 	Point touchLocation = pTouch->getLocationInView();
 	touchLocation = Director::getInstance()->convertToGL(touchLocation);
 
-	_player->getPhysicsBody()->setEnable(true);
-	_player->getPhysicsBody()->setVelocity(Vec2(0,260));
+	//_player->getPhysicsBody()->setEnable(true);
+	playerState = STATE::JUMPING;
 
-
-	auto back = projectile.back();
-	auto back_x = back->getPositionX();
-	auto back_y = back->getPositionY();
-
-	for (auto p : projectile){
-		auto x = p->getPositionX();
-		auto y = p->getPositionY();
-		auto move = MoveTo::create(0.5f,Vec2(x-100,y));
+	{
+		auto x = _player->getPositionX();
+		auto y = _player->getPositionY();
+		auto moveUp = MoveTo::create(0.15f,Vec2(x, y+60));
+		auto moveDown = MoveTo::create(0.35f, Vec2(x, y));
 
 		auto callback = CallFunc::create([this](){
 			this->JumpedCallBack();
-		});
-		auto action = Sequence::create(move->clone(), callback,NULL);
+		});
+		auto action = Sequence::create(moveUp->clone(), moveDown->clone(), callback, NULL);
 		
-		p->runAction(action);
-		
+		_player->runAction(action->clone());
 	}
-	auto front = projectile.front();
-	front->stopAllActions();
-	front->setPosition(back_x, back_y);
-	projectile.push_back(projectile.front());
-	projectile.erase(projectile.begin());
+
+	if (firstTouch){
+		
+		for (auto p : projectile){
+			auto x = p->getPositionX();
+			auto y = p->getPositionY();
+			auto move = MoveTo::create(0.5f, Vec2(x - 100, y));
+			p->runAction(move);
+
+		}
+		firstTouch = false;
+		playerState = STATE::READY;
+	}
+	else
+	{
+		//_player->getPhysicsBody()->setVelocity(Vec2(0, 260));
+		auto back = projectile.back();
+		auto back_x = back->getPositionX();
+		auto back_y = back->getPositionY();
+
+		for (auto p : projectile){
+			auto x = p->getPositionX();
+			auto y = p->getPositionY();
+			auto move = MoveTo::create(0.5f, Vec2(x - 100, y));
+			p->runAction(move);
+
+		}
+		auto front = projectile.front();
+		front->stopAllActions();
+		front->setPosition(back_x, back_y);
+		projectile.push_back(projectile.front());
+		projectile.erase(projectile.begin());
+	}
+
+
 	return true;
 }
 
@@ -223,8 +256,6 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
 	PhysicsBody* a = contact.getShapeA()->getBody();
 	PhysicsBody* b = contact.getShapeB()->getBody();
 
-
-
 	return true;
 }
 
@@ -237,12 +268,12 @@ void HelloWorld::addPipe(int index)
 	auto label = Label::createWithTTF(buf, "fonts/Marker Felt.ttf", 80);
 	label->setAnchorPoint(Vec2(0,0));
 	_p->addChild(label);
-	auto OneBody = PhysicsBody::createBox(_p->getContentSize());
-	OneBody->setContactTestBitmask(0x04);
-	OneBody->setGravityEnable(false);
-	OneBody->setDynamic(false);
-	_p->setPosition(visibleSize.width / 8+index*100, visibleSize.height / 2 - _p->getContentSize().height*2);
-	_p->setPhysicsBody(OneBody);
+	//auto OneBody = PhysicsBody::createBox(_p->getContentSize());
+	//OneBody->setContactTestBitmask(0x04);
+	//OneBody->setGravityEnable(false);
+	//OneBody->setDynamic(false);
+	_p->setPosition(visibleSize.width / 8+index*100, visibleSize.height / 2 - _p->getContentSize().height);
+	//_p->setPhysicsBody(OneBody);
 	
 
 	projectile.push_back(_p);
@@ -259,5 +290,5 @@ void HelloWorld::JumpedCallBack()
 	freopen("CONOUT$", "w", stdout);
 	freopen("CONOUT$", "w", stderr);
 	CCLOG("----x=>%f---y=>%f-------------", _player->getPosition().x, _player->getPosition().y);
-
+	playerState = STATE::READY;
 }
