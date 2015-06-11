@@ -58,45 +58,14 @@ bool HelloWorld::init()
 
     /////////////////////////////
     // 3. add your codes below...
-
-    // add a label shows "Hello World"
-    // create and initialize a label
-  
-    auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 80);
-    
-    // position the label on the center of the screen
-    label->setPosition(Vec2(origin.x + visibleSize.width/2,
-                            origin.y + visibleSize.height - label->getContentSize().height));
-
-    // add the label as a child to this layer
-    this->addChild(label, 1);
-
 	
-    // add "HelloWorld" splash screen"
-	bg = Sprite::create("Dota2.jpg");
-	bg->retain();
-    // position the sprite on the center of the screen
-	bg->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
-	
-    // add the sprite as a child to this layer
-	this->addChild(bg, 0);
+	initBg();
     
-
-	//hzk add 
-
-	_player = Sprite::create("player-hd.png");
-	_player->setPosition(visibleSize.width / 8, visibleSize.height / 2);
-
-	//auto OneBody = PhysicsBody::createBox(_player->getContentSize());
-	//OneBody->setContactTestBitmask(0x04);
-
-	//_player->setPhysicsBody(OneBody);
-	this->addChild(_player,0);
-	_player->retain();
+	addPlayer();
 
 	int i = 0;
 	while (i<=4)
-	addPipe(i++);
+		addPipe(i++);
 
 	//this->schedule(schedule_selector(HelloWorld::addMonster), 1);
 
@@ -110,9 +79,9 @@ bool HelloWorld::init()
 	touch_listener->onTouchCancelled = CC_CALLBACK_2(HelloWorld::onTouchCancelled, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(touch_listener, this);
 
-	EventListenerPhysicsContact *contact_listener = EventListenerPhysicsContact::create();
-	contact_listener->onContactBegin = CC_CALLBACK_1(HelloWorld::onContactBegin, this);
-	_eventDispatcher->addEventListenerWithSceneGraphPriority(contact_listener, this);
+	//EventListenerPhysicsContact *contact_listener = EventListenerPhysicsContact::create();
+	//contact_listener->onContactBegin = CC_CALLBACK_1(HelloWorld::onContactBegin, this);
+	//_eventDispatcher->addEventListenerWithSceneGraphPriority(contact_listener, this);
 
 	scheduleUpdate();
 	
@@ -141,8 +110,25 @@ bool HelloWorld::onTouchBegan(Touch* pTouch, Event* pEvent)
 	{
 		return true;
 	}
-	auto move = MoveTo::create(0.5f, Vec2(bg->getPositionX() - 100, bg->getPositionY()));
-	bg->runAction(move);
+
+	auto bg = background.front();
+	if ((bg->getPositionX()< -0.0f) && (bg->getPositionX() + bg->getContentSize().width/2)<0.0f){
+
+		auto front = background.front();
+		auto back = background.back();
+		front->setPositionX(back->getPositionX() + back->getContentSize().width / 2 + front->getContentSize().width/2);
+		background.push_back(front);
+		background.erase(background.begin());
+	}
+
+	for (auto bg : background){
+		auto move = MoveTo::create(0.5f, Vec2(bg->getPositionX() - 100, bg->getPositionY()));
+		bg->runAction(move);
+	}
+
+
+
+
 	Size visibleSize = Director::getInstance()->getVisibleSize();
 
 	Point touchLocation = pTouch->getLocationInView();
@@ -262,26 +248,75 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
 void HelloWorld::addPipe(int index)
 {
 	Size visibleSize = Director::getInstance()->getVisibleSize();
-	_p = Sprite::create("monster-hd.png");
+	auto p = Sprite::create("monster-hd.png");
 	char buf[10] = {0};
 	sprintf(buf,"%d",index);
 	auto label = Label::createWithTTF(buf, "fonts/Marker Felt.ttf", 80);
 	label->setAnchorPoint(Vec2(0,0));
-	_p->addChild(label);
+	p->addChild(label);
 	//auto OneBody = PhysicsBody::createBox(_p->getContentSize());
 	//OneBody->setContactTestBitmask(0x04);
 	//OneBody->setGravityEnable(false);
 	//OneBody->setDynamic(false);
-	_p->setPosition(visibleSize.width / 8+index*100, visibleSize.height / 2 - _p->getContentSize().height);
+	p->setPosition(visibleSize.width / 8+index*100, visibleSize.height / 2 - p->getContentSize().height);
 	//_p->setPhysicsBody(OneBody);
 	
 
-	projectile.push_back(_p);
+	projectile.push_back(p);
+	p->retain();
 
 	this->addChild(projectile.back(), 1);
 	pipe_count = projectile.size();
-	_p->retain();
+	
 }
+
+void HelloWorld::addPlayer()
+{
+	//hzk add 
+	Size visibleSize = Director::getInstance()->getVisibleSize();
+
+	_player = Sprite::create("player-hd.png");
+	_player->setPosition(visibleSize.width / 8, visibleSize.height / 2);
+
+	//auto OneBody = PhysicsBody::createBox(_player->getContentSize());
+	//OneBody->setContactTestBitmask(0x04);
+
+	//_player->setPhysicsBody(OneBody);
+	this->addChild(_player, 0);
+	_player->retain();
+}
+
+
+void HelloWorld::initBg()
+{
+	// add "HelloWorld" splash screen"
+	Size visibleSize = Director::getInstance()->getVisibleSize();
+	Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+	auto bg_first = Sprite::create("Dota2.jpg");
+	bg_first->retain();
+	bg_first->setPosition(Vec2(visibleSize.width / 2 + origin.x, visibleSize.height / 2 + origin.y));
+	background.push_back(bg_first);
+	this->addChild(background.back(), -1);
+
+	auto bg_second = Sprite::create("ZX.jpg");
+	bg_second->retain();
+	bg_second->setPosition(Vec2(bg_first->getPositionX() + bg_first->getContentSize().width / 2 + bg_second->getContentSize().width/2,
+		visibleSize.height / 2 + origin.y));
+	background.push_back(bg_second);
+	this->addChild(background.back(), -1);
+
+	auto bg_third = Sprite::create("ZX.jpg");
+	bg_third->retain();
+	bg_third->setPosition(Vec2(bg_second->getPositionX() + bg_second->getContentSize().width / 2 + bg_third->getContentSize().width / 2,
+		visibleSize.height / 2 + origin.y));
+	background.push_back(bg_third);
+	this->addChild(background.back(), -1);
+
+}
+
+
+
 
 void HelloWorld::JumpedCallBack()
 {

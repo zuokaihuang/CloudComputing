@@ -22,7 +22,15 @@ public:
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
 	~HelloWorld(){ _player->release();
-	_p->release();
+			
+			for (auto bg : background){
+				bg->release();
+			}
+			background.clear();
+			for (auto p : projectile){
+				p->release();
+			}
+			projectile.clear();
 	}
     
 public:
@@ -32,12 +40,16 @@ public:
 	void update(float dt);
 private:
 	cocos2d::Sprite* _player;
-	cocos2d::Sprite* _p;
+
 	void addMonster(float dt);
 	void addPipe(int index);
+	void addPlayer();
+	void initBg();
 
 	std::vector<cocos2d::Sprite*> Monster;
 	std::vector<cocos2d::Sprite*> projectile;
+	std::vector<cocos2d::Sprite*> background;
+
 	virtual bool onTouchBegan(cocos2d::Touch* pTouch, cocos2d::Event* pEvent);
 	virtual void onTouchMoved(cocos2d::Touch* pTouch, cocos2d::Event* pEvent);
 	virtual void onTouchEnded(cocos2d::Touch* pTouch, cocos2d::Event* pEvent);
@@ -49,6 +61,8 @@ private:
 	cocos2d::EventListenerTouchOneByOne* touch_listener;
 	int i, j ,t;
 	int pipe_count;
+	bool firstTouch;
+	STATE playerState;
 };
 
 #endif // __HELLOWORLD_SCENE_H__
