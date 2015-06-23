@@ -1,5 +1,6 @@
 #include "AppDelegate.h"
 #include "HelloWorldScene.h"
+#include "D:\My_project\HelloWorldDemo\proj.win32\Test.h"
 
 USING_NS_CC;
 
@@ -29,6 +30,12 @@ bool AppDelegate::applicationDidFinishLaunching() {
     if(!glview) {
         glview = GLViewImpl::create("My Game");
         director->setOpenGLView(glview);
+
+	#if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) 
+		glview->setFrameSize(2560/2,1600/2);
+		glview->setDesignResolutionSize(2560 / 2, 1600 / 2, ResolutionPolicy::SHOW_ALL);
+	#endif
+		//add the logic code
     }
 
     // turn on display FPS
@@ -39,7 +46,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
     // create a scene. it's an autorelease object
     auto scene = HelloWorld::createScene();
-
+	//auto scene = Test::createScene();
     // run
     director->runWithScene(scene);
 

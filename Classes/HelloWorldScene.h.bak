@@ -2,36 +2,25 @@
 #define __HELLOWORLD_SCENE_H__
 
 #include "cocos2d.h"
-#include "Box2D/Box2D.h"
 
 #include <stdio.h>
 #include <stdlib.h>//srand()��rand()
 #include <time.h>//time();
-//#include <conio.h>
+#include <conio.h>
 
-//asdfasd
+asdfasd
 enum class STATE
 {
 	READY,
 	JUMPING
 };
 
-static float avgW = 270.0f;
-static float avgH = 200.0f;
-static float jumpLenght = 200.0f;
-static float fontSize = 50;
+static float avgW = 40.0f;
+static float avgH = 40.0f;
+static float jumpLenght = 120.0f;
 static const char* ok = "ok";
 static const std::string answer_name = "lastanswer";
 
-static float scarelXbase = 1080;
-static float scarelYbase = 1920;
-
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
-	#define MUSIC_FILE  "res/jumping.ogg"
-#elif (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32)
-	#define MUSIC_FILE  "res/jumping.wav"
-#endif
- 
 class HelloWorld : public cocos2d::Layer
 {
 public:
@@ -52,7 +41,6 @@ public:
 	~HelloWorld(){ _player->release();
 				m_inputImage->release();
 				m_scoreLable->release();
-				m_notifyLable->release();
 
 			for (auto bg : background){
 				bg->release();
@@ -114,13 +102,8 @@ private:
 
 	int					m_score;
 	cocos2d::Label*		m_scoreLable;
-	cocos2d::Label*		m_notifyLable;
-
 	void					drawScore(int score);
 	void					marking(long time);
-	void					drawNiceOrBadNotify(std::string notify,int score);
-	void					removeNotifyCallback(Node* pSender);
-
 	//�Զ��������
 	//void					updateCustom(float dt);
 
@@ -136,18 +119,18 @@ private:
 	static std::map<std::string,cocos2d::Rect> CreateInputMap()
 	{
 		std::map<std::string, cocos2d::Rect> map;
-		map[std::string("delete")] = cocos2d::Rect(avgW*0,avgH*0, avgW, avgH);
-		map[std::string("0")] = cocos2d::Rect(avgW * 1, avgH * 0, avgW, avgH);
-		map[std::string("ok")] = cocos2d::Rect(avgW * 2, avgH * 0, avgW, avgH);
-		map[std::string("1")] = cocos2d::Rect(avgW * 0, avgH * 1, avgW, avgH);
-		map[std::string("2")] = cocos2d::Rect(avgW * 1, avgH * 1, avgW, avgH);
-		map[std::string("3")] = cocos2d::Rect(avgW * 2, avgH * 1, avgW, avgH);
-		map[std::string("4")] = cocos2d::Rect(avgW * 0, avgH * 2, avgW, avgH);
-		map[std::string("5")] = cocos2d::Rect(avgW * 1, avgH * 2, avgW, avgH);
-		map[std::string("6")] = cocos2d::Rect(avgW * 2, avgH * 2, avgW, avgH);
-		map[std::string("7")] = cocos2d::Rect(avgW * 0, avgH * 3, avgW, avgH);
-		map[std::string("8")] = cocos2d::Rect(avgW * 1, avgH * 3, avgW, avgH);
-		map[std::string("9")] = cocos2d::Rect(avgW * 2, avgH * 3, avgW, avgH);
+		map[std::string("delete")] = cocos2d::Rect(0.0f,0.0f,avgW,avgH);
+		map[std::string("0")] = cocos2d::Rect(40.0f, 0.0f, avgW, avgH);
+		map[std::string("ok")] = cocos2d::Rect(80.0f, 0.0f, avgW, avgH);
+		map[std::string("1")] = cocos2d::Rect(0.0f, 40.0f, avgW, avgH);
+		map[std::string("2")] = cocos2d::Rect(40.0f, 40.0f, avgW, avgH);
+		map[std::string("3")] = cocos2d::Rect(80.0f, 40.0f, avgW, avgH);
+		map[std::string("4")] = cocos2d::Rect(0.0f, 80.0f, avgW, avgH);
+		map[std::string("5")] = cocos2d::Rect(40.0f, 80.0f, avgW, avgH);
+		map[std::string("6")] = cocos2d::Rect(80.0f, 80.0f, avgW, avgH);
+		map[std::string("7")] = cocos2d::Rect(0.0f, 120.0f, avgW, avgH);
+		map[std::string("8")] = cocos2d::Rect(40.0f, 120.0f, avgW, avgH);
+		map[std::string("9")] = cocos2d::Rect(80.0f, 120.0f, avgW, avgH);
 		return map;
 	}
 	static const std::map<std::string, cocos2d::Rect> InputMap;
